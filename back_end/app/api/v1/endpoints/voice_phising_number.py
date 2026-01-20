@@ -7,7 +7,10 @@ import uuid
 from app.db.session import get_db
 from datetime import datetime
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/voice_phising_number",
+    tags=["voice_phising_number"],
+)
 
 # 스키마 :::: API 입출력 데이터 계약
 class VoicePhisingCreate(BaseModel): # 
@@ -37,3 +40,35 @@ def insert_number(payload: VoicePhisingCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="이미 등록된 번호입니다.")
     db.refresh(row)
     return row
+def insert_or_increment(body: VoicePhisingCreate, db: Session = Depends(get_db)):
+    number = body.number.strip()
+
+    obj = db.query(VoicePhisingNumberList).filter(VoicePhisingNumberList.number == number).first()
+
+    if obj:
+        obj.report_count = (obj.report_count or 1) + 1
+        if body.description:
+            obj.description = body.description
+        db.commit()
+        db.refresh(obj)
+        return obj
+
+    obj = VoicePhisingNumberList(number=number, description=body.description, report_count=1)
+    db.add(obj)
+    db.commit()
+    db.refresh(obj)
+    return obj
+
+@router.get("/snapshot")
+def get_snapshot(db: Session = Depends(get_db)):
+    rows = db.query(VoicePhisingNumberList).all()
+    return [
+        {
+            "id": str(r.id),
+            "number": r.number,
+            "description": r.description,
+            "report_count": r.report_count,
+            "updated_at": r.updated_at.isoformat() if r.updated_at else None,
+        }
+        for r in rows
+    ]

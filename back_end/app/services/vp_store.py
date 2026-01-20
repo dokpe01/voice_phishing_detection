@@ -23,6 +23,7 @@ class VoicePhishingStore:
         self._last_call_id: str | None = None
         
     async def add_score(self, call_id: str, score: float) -> None:
+        print("call_id : ", call_id)
         async with self._lock:
             self._last_call_id = call_id
             item = self._data.get(call_id)
@@ -48,9 +49,11 @@ class VoicePhishingStore:
         max_score = max(scores)
 
         # 추천 집계: mean + max 혼합
+        # Blend mean + max to reduce noise while keeping peaks.
         final_score = 0.7 * mean_score + 0.3 * max_score
 
         # 최종 플래그 룰
+        # Simple threshold decision for alerting.
         flag = final_score >= 0.5
 
         debug = {

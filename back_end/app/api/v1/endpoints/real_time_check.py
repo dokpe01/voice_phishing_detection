@@ -1,6 +1,7 @@
-# app/api/routes/mfcc_mel_fusion.py
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 import numpy as np
+import os
+os.environ["CT2_CUDA_ALLOCATOR"] = "cuda_malloc_async"  # Python import 전에
 
 from starlette.concurrency import run_in_threadpool
 
@@ -8,31 +9,32 @@ from app.utils.crypto import decrypt_aes
 from app.services.vp_store import VoicePhishingStore
 
 from app.services.mfcc_infer import MFCCInfer, MFCCInferConfig
-from app.services.mel_infer import MelInfer, MelInferConfig
+from app.services.mel_best_infer import MelBestInfer, MelInferConfig
 
 from app.services.stt_store import STTBufferStore
 from app.services.text_infer import TextInfer, TextInferConfig
 
 from app.services.stt_infer import STTInfer, STTInferConfig
 import time
-import logging
 import asyncio
 import logging
-import logging
-# logger = logging.getLogger("mel")
 
-router = APIRouter()
-
-# logger = logging.getLogger("vp")
-# logger.setLevel(logging.INFO)
+router = APIRouter(
+    prefix="/real_time",
+    tags=["real_time"],
+)
 
 mfcc_infer: MFCCInfer | None = None
-mel_infer: MelInfer | None = None
+mel_infer: MelBestInfer | None = None
 text_infer: TextInfer | None = None
 stt_infer: STTInfer | None = None
 
 vp_store = VoicePhishingStore(ttl_sec=60 * 60)
 stt_store = STTBufferStore(ttl_sec=60 * 60, max_keep=50)
+
+# 중복호출을 막기 위한 lock
+# Prevent concurrent model loads on startup.
+_load_lock = asyncio.Lock()
 
 
 def fuse_scores(mfcc_score: float, mel_score: float, w_mfcc: float = 0.5, w_mel: float = 0.5) -> float:
@@ -42,7 +44,7 @@ def fuse_scores(mfcc_score: float, mel_score: float, w_mfcc: float = 0.5, w_mel:
     fused = (mfcc_score * w_mfcc + mel_score * w_mel) / denom
     return float(min(1.0, max(0.0, fused)))
 
-
+# 이거 안쓸것임ㅋㅋㅋㅋㅋ
 def fuse_three(audio_score: float, text_score: float, w_audio: float = 0.8, w_text: float = 0.2) -> float:
     denom = w_audio + w_text
     if denom <= 0:
@@ -51,33 +53,41 @@ def fuse_three(audio_score: float, text_score: float, w_audio: float = 0.8, w_te
     return float(min(1.0, max(0.0, v)))
 
 
-@router.on_event("startup")
-def startup_load_models():
+async def startup_load_models():
     global mfcc_infer, mel_infer, text_infer, stt_infer
 
-    mfcc_infer = MFCCInfer(
-        model_path="assets/models/binary_cnn_mfcc.pt",
-        cfg=MFCCInferConfig(device="cpu", target_frames=500),
-    )
+    async with _load_lock:
+        # stt_infer ::: 이게 젤 무겁고 후반에 로드되어서 이건만 체크~~
+        print("시작!!!")
+        if stt_infer is not None:
+            print("이미 stt_infer 로드됨")
+            return
 
-    mel_infer = MelInfer(
-        model_path="assets/models/mel_spectrogram_model.pt",
+        print("모델 로드 중...")
+    mfcc_infer = MFCCInfer(
+        model_path="assets/models/best_res2net50_se.pth",
+        cfg=MFCCInferConfig(device="cpu", center=False, target_frames=498),
+    )
+   
+    mel_infer = MelBestInfer(
+        model_path="assets/models/best_model_tuning.pth",
         cfg=MelInferConfig(
             device="cpu",
-            sample_rate=16000,
-            segment_sec=5.0,
-            n_fft=1024,
-            hop_length=256,
-            n_mels=128,
-            fmin=20,
-            fmax=8000,
+            input_sample_rate=16000,
+            target_sample_rate=22050,
+            duration_sec=5, 
+            n_mels=224,
+            hop_length=512,
             img_size=224,
+            threshold=0.6,
+            model_name="res2net50_26w_4s",
+            num_classes=2,
         ),
     )
 
     text_infer = TextInfer(
         TextInferConfig(
-            device="cpu",
+            device="cuda", 
             ae_path="assets/models/final_ae.pth",
             kobert_path="assets/models/kobert",
             threshold=5500.0,
@@ -86,11 +96,12 @@ def startup_load_models():
     )
 
     # 서버 STT(Whisper) 로드
+    # Load heavy STT model once to avoid per-request overhead.
     stt_infer = STTInfer(
         STTInferConfig(
-            model_size="small",
-            device="cpu",
-            compute_type="int8",
+            model_size="large-v3",
+            device="cuda",
+            compute_type="float16",
             language="ko",
             vad_filter=False,
             beam_size=1,
@@ -123,10 +134,14 @@ async def mfcc_mel_fusion_endpoint(
     if audio_i16.size == 0:
         raise HTTPException(status_code=400, detail="Decoded PCM is empty")
 
+    # Audio-model inference (MFCC + MEL) for fast risk scoring.
+
     # ----- 오디오 모델 추론 -----
     try:
         mfcc_result = mfcc_infer.predict_from_pcm_i16(audio_i16)
         mfcc_score = float(mfcc_result["phishing_score"])
+        print("mfcc_result", mfcc_result )
+        print("mfcc_score", mfcc_score )
     except Exception:
         raise HTTPException(status_code=500, detail="MFCC inference failed")
 
@@ -144,6 +159,9 @@ async def mfcc_mel_fusion_endpoint(
     text_risk = 0.0
     should_alert = False
     stt_text = ""
+    password_warning = False
+
+    # STT is CPU/GPU heavy, so keep the event loop responsive.
 
     # STT는 시간이 걸리므로 threadpool에서 실행
     try:
@@ -159,22 +177,38 @@ async def mfcc_mel_fusion_endpoint(
         print("STT error:", repr(e))
         stt_text = ""
 
+    if "비밀번호" in stt_text:
+        password_warning = True
+
     if stt_text.strip():
+        print("STT_RESULT", call_id, repr(stt_text.strip()))
         await stt_store.add_text(call_id, stt_text.strip())
         buffered = await stt_store.get_last_texts(call_id, n=text_infer.cfg.buffer_size)
 
         text_payload = text_infer.predict(buffered)
         text_risk = float(text_payload.get("risk_score", 0.0))
 
-        if text_payload.get("status") == "🚨 CRITICAL":
+        if text_payload.get("status") == "CRITICAL":
+            should_alert = True
+        elif password_warning:
+            text_payload["status"] = "WARNING"
             should_alert = True
 
     # ----- 최종 fused_score -----
+    # Final score favors audio, but allows text risk to lift the result.
+    # fused_score 가 아닌 따로 알림을 울려야한다
+    # 1. w_audio 가 0.9 가 넘으면 알림
+    # 2. w_text 의 result 를 5초마다 알림(3개 누적한 알림보고)
+
+    # 3. mel + mfcc 는 맞음
     final_fused = audio_fused if text_payload is None else fuse_three(audio_fused, text_risk, w_audio=0.8, w_text=0.2)
+    
+    # mel + mfcc 점수 표기 
+    deepvoice_score = audio_fused # 0.5 * mfcc + 0.5 * mel
 
     await vp_store.add_score(call_id, final_fused)
 
-    if final_fused >= 0.85:
+    if final_fused >= 0.80:
         should_alert = True
         
     dt_ms = (time.perf_counter() - t0) * 1000.0
@@ -182,21 +216,30 @@ async def mfcc_mel_fusion_endpoint(
     
     return {
         "call_id": call_id,
-        "phishing_score": final_fused,
-        "should_alert": should_alert,
-
+        "deepvoiceScore": deepvoice_score, # mel + mfcc 점수
+        "should_alert": should_alert, 
+        "koberScore": text_payload, # kobert + ae 결과
         "stt": {
-            "text": stt_text,
-            "buffered_n": (len(await stt_store.get_last_texts(call_id, n=text_infer.cfg.buffer_size)) if stt_text.strip() else 0),
+            "text": stt_text, # 5초 음성에 대한 STT 결과
         },
-
-        "audio": {
-            "phishing_score": audio_fused,
-            "mfcc_score": mfcc_score,
-            "mel_score": mel_score,
-        },
-
-        "text": text_payload,
-        "mfcc": {"raw": mfcc_result},
-        "mel": {"raw": mel_result},
     }
+
+#  return {
+#         "call_id": call_id,
+#         "deepvoiceScore": deepvoice_score, # mel + mfcc 점수
+#         "should_alert": should_alert, 
+#         "koberScore": text_payload, # kobert + ae 결과
+#         "stt": {
+#             "text": stt_text, # 5초 음성에 대한 STT 결과(stt 만)
+#             "buffered_n": (len(await stt_store.get_last_texts(call_id, n=text_infer.cfg.buffer_size)) if stt_text.strip() else 0),
+#         },
+#         "audio": {
+#             "deepvoiceScore": audio_fused,
+#             "mfcc_score": mfcc_score,
+#             "mel_score": mel_score,
+#         },
+
+        
+#         "mfcc": {"raw": mfcc_result},
+#         "mel": {"raw": mel_result},
+#     }
