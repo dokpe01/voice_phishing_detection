@@ -1,0 +1,241 @@
+// 🔌 Gradle 플러그인 설정
+plugins {
+    // Android 애플리케이션 플러그인
+    alias(libs.plugins.android.application)
+    // Kotlin Android 플러그인
+    alias(libs.plugins.kotlin.android)
+
+    // Kotlin Compose 플러그인 (Compose 사용 시 필요)
+    alias(libs.plugins.kotlin.compose)
+    // kapt 활성 ( @Entity, @Dao ) 쓸려고 함
+    id("com.google.devtools.ksp")
+    // Dagger Hilt Plugin
+    id("com.google.dagger.hilt.android") version "2.58"
+}
+
+android {
+    // 📦 앱의 패키지 네임스페이스
+    namespace 'com.final_pj.voice'
+    compileSdk 36
+
+    // 🧱 컴파일 SDK 버전 (빌드 시 기준 Android API)
+
+    defaultConfig {
+
+        // 📱 실제 앱 ID (Play Store 기준)
+        applicationId "com.final_pj.voice"
+
+        // ⬇ 최소 지원 Android 버전 (Android 13)
+        minSdk 33
+        // minSdk 28 // 안드로이드 9를 위한 수정
+
+        // 🎯 타겟 SDK (Android 15/16 대응)
+        targetSdk 36
+
+        // 🔢 내부 버전 코드 (업데이트 시 증가)
+        versionCode 1
+
+        // 🏷 사용자에게 보이는 버전 이름
+        versionName "1.2"
+
+        // 🧪 테스트 러너 설정
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    // 🏗 빌드 타입 설정
+    buildTypes {
+        debug {
+            debuggable true
+        }
+        release {
+            // 🔐 코드 난독화 비활성
+            minifyEnabled false
+            // 디버그 모드
+            debuggable false
+
+            // 📜 Proguard 설정 파일
+            proguardFiles getDefaultProguardFile(
+                    'proguard-android-optimize.txt'
+            ), 'proguard-rules.pro'
+        }
+    }
+
+    // ☕ Java 컴파일 옵션
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    // 🟣 Kotlin JVM 타겟
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+
+    // 🧩 빌드 기능 활성화
+    buildFeatures {
+        // Jetpack Compose (현재 비활성)
+        // compose true
+
+        // XML ViewBinding 활성화
+        viewBinding true
+    }
+
+    // 📦 AAPT 옵션 (압축 제외 파일)
+
+    // 📦 패키징 설정
+    packaging {
+        jniLibs {
+            // 구형 JNI 패키징 방식 사용 (ML 라이브러리 호환)
+            useLegacyPackaging = true
+        }
+    }
+    androidResources {
+        noCompress 'tflite'
+    }
+
+//    // 🔧 PyTorch / FFmpeg 관련 충돌 해결
+//    packagingOptions {
+//        // C++ 공유 라이브러리 중복 시 첫 번째 사용
+//        pickFirst 'lib/x86/libc++_shared.so'
+//        pickFirst 'lib/x86_64/libc++_shared.so'
+//        pickFirst 'lib/armeabi-v7a/libc++_shared.so'
+//        pickFirst 'lib/arm64-v8a/libc++_shared.so'
+//    }
+//
+//    // 🎧 FFmpegKit 패키지 타입 (audio 전용)
+//    rootProject.ext.ffmpegKitPackage = "audio"
+}
+
+dependencies {
+
+    // 🔹 Android 기본 KTX 확장
+    implementation libs.androidx.core.ktx
+    // 하루 1회 자동 동기화
+    implementation libs.androidx.work.runtime.ktx
+    // 🔹 Lifecycle (런타임)
+    implementation libs.androidx.lifecycle.runtime.ktx
+
+    // 🔹 Compose Activity 지원
+    implementation libs.androidx.activity.compose
+
+    // 🔹 Compose BOM (버전 통합 관리)
+    implementation platform(libs.androidx.compose.bom)
+
+    // 🔹 Compose UI 핵심
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.graphics
+    implementation libs.androidx.compose.ui.tooling.preview
+
+    // 🔹 Compose Material3
+    implementation libs.androidx.compose.material3
+
+    // 🔹 AppCompat (하위 호환)
+    implementation libs.androidx.appcompat
+
+    // 🔹 프로세스 라이프사이클 관리
+    implementation libs.androidx.lifecycle.process
+
+    // 🔹 RecyclerView
+    implementation libs.androidx.recyclerview
+
+    // 🔹 Material Design
+    implementation libs.material
+
+    // 🔹 ConstraintLayout (MotionLayout 포함)
+    implementation libs.androidx.constraintlayout
+
+    // 🔹 LiveData
+    implementation libs.androidx.lifecycle.livedata.ktx
+
+    // 🔹 ViewModel
+    implementation libs.androidx.lifecycle.viewmodel.ktx
+
+    // 🔹 Fragment KTX
+    implementation libs.androidx.fragment.ktx
+
+    // 🔹 Media3 (미디어 공통 유틸)
+    implementation libs.androidx.media3.common.ktx
+
+    // 🔊 오디오 DSP 라이브러리 (JAR 직접 포함)
+    //implementation files('libs/TarsosDSP-Android-latest.jar')
+    implementation libs.tarsosdsp
+    implementation libs.androidx.room.common.jvm
+    implementation libs.volley
+    implementation libs.generativeai
+    implementation libs.androidx.compose.remote.creation.compose
+    implementation libs.filament.android
+    implementation libs.androidx.annotation
+    implementation libs.androidx.activity
+    implementation libs.androidx.compose.runtime
+    implementation libs.transport.runtime
+
+    // 🧪 단위 테스트
+    testImplementation libs.junit
+
+    // 🧪 Android 테스트
+    androidTestImplementation libs.androidx.junit
+    androidTestImplementation libs.androidx.espresso.core
+
+    // 🧪 Compose 테스트
+    androidTestImplementation platform(libs.androidx.compose.bom)
+    androidTestImplementation libs.androidx.compose.ui.test.junit4
+
+    // 🛠 Compose 디버그 툴
+    debugImplementation libs.androidx.compose.ui.tooling
+    debugImplementation libs.androidx.compose.ui.test.manifest
+
+    // 🎙 음성 인식 (VOSK)
+    // implementation 'com.alphacephei:vosk-android:0.3.75'
+
+    // 🎨 Material Components
+    implementation libs.material.v1110
+
+    // ConstraintLayout 최신 버전 (MotionLayout 필수)
+    implementation libs.androidx.constraintlayout.v214
+
+    // Jetpack Navigation
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+
+    // 네트워크 통신 (OkHttp)
+    implementation(libs.okhttp)
+    implementation(libs.logging.interceptor)
+
+    // 코루틴 (백그라운드 처리)
+    implementation libs.kotlinx.coroutines.core
+    implementation libs.kotlinx.coroutines.android
+
+
+    // Room: Android 공식 로컬 DB(SQLite) ORM 라이브러리
+    // → SQL을 직접 쓰지 않고, Entity / DAO / Annotation 기반으로 DB 접근 가능
+    implementation libs.androidx.room.runtime
+
+    // Room KTX: 코루틴, Flow 등 Kotlin 친화적 확장 기능 제공
+    // → suspend 함수, Flow<T> 반환 등 사용하려면 필수
+    implementation libs.androidx.room.ktx
+
+    // Room Compiler (KSP)
+    // → @Entity, @Dao, @Database 어노테이션을 실제 구현 코드로 생성
+    ksp(libs.androidx.room.compiler)
+
+    // Gson: JSON <-> 객체 직렬화/역직렬화 라이브러리
+    // → 서버 응답 파싱, 로컬 저장용 JSON 변환 등에 사용
+    implementation libs.gson
+
+    implementation libs.androidx.datastore.preferences
+    implementation libs.retrofit
+    implementation libs.converter.gson
+
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.views)
+
+
+    implementation(libs.mpandroidchart)
+    // Dagger Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.lifecycle.viewmodel)
+}

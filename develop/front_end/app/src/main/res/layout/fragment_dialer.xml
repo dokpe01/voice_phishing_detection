@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/app_background"
+    tools:context=".feature.call.fragment.DialerFragment">
+
+    <!-- 상단 헤더 영역 (HomeFragment와 통일) -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/header_dialer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/app_background"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/title_dialer"
+            style="@style/FragmentTitleStyle"
+            android:text=""
+            android:background="@android:color/transparent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <ImageButton
+            android:id="@+id/btn_search_contact"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_search"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/primary_blue"
+            app:layout_constraintEnd_toStartOf="@id/btn_add_contact_dial"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginEnd="8dp"/>
+
+        <ImageButton
+            android:id="@+id/btn_add_contact_dial"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_add"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/primary_blue"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginEnd="16dp"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- 번호 표시 영역 -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/numberCard"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/app_background"
+        app:layout_constraintTop_toBottomOf="@id/header_dialer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/dial_pad">
+
+        <EditText
+            android:id="@+id/etPhoneNumber"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint=""
+            android:textSize="32sp"
+            android:gravity="center"
+            android:inputType="phone"
+            android:focusable="false"
+            android:textColor="@color/main_text"
+            android:background="@android:color/transparent"
+            android:padding="16dp"
+            android:textStyle="bold"/>
+    </androidx.cardview.widget.CardView>
+
+    <!-- 다이얼 패드 -->
+    <GridLayout
+        android:id="@+id/dial_pad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:rowCount="4"
+        android:columnCount="3"
+        android:alignmentMode="alignMargins"
+        android:columnOrderPreserved="false"
+        android:useDefaultMargins="true"
+        app:layout_constraintTop_toBottomOf="@id/numberCard"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomBar">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn1"
+            style="@style/DialKeyButton"
+            android:text="1" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn2"
+            style="@style/DialKeyButton"
+            android:text="2" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn3"
+            style="@style/DialKeyButton"
+            android:text="3" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn4"
+            style="@style/DialKeyButton"
+            android:text="4" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn5"
+            style="@style/DialKeyButton"
+            android:text="5" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn6"
+            style="@style/DialKeyButton"
+            android:text="6" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn7"
+            style="@style/DialKeyButton"
+            android:text="7" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn8"
+            style="@style/DialKeyButton"
+            android:text="8" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn9"
+            style="@style/DialKeyButton"
+            android:text="9" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnStar"
+            style="@style/DialKeyButton"
+            android:text="*" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn0"
+            style="@style/DialKeyButton"
+            android:text="0" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnHash"
+            style="@style/DialKeyButton"
+            android:text="#" />
+    </GridLayout>
+
+    <!-- 하단 바 -->
+    <LinearLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingBottom="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <View
+            android:layout_width="56dp"
+            android:layout_height="56dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCall"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="86dp"
+            android:layout_height="86dp"
+            android:layout_marginHorizontal="22dp"
+            app:cornerRadius="43dp"
+            android:paddingLeft="30dp"
+            android:backgroundTint="@color/primary_blue"
+            app:icon="@drawable/ic_phone_call"
+            app:iconTint="@color/white"
+            app:iconSize="32dp"
+            app:iconGravity="textStart"
+            android:text=""
+            android:elevation="4dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_delete"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            app:icon="@drawable/ic_backspace"
+            app:iconTint="@color/gray_text"
+            android:backgroundTint="@android:color/transparent" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

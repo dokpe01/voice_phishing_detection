@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 명시적 색상 (참조용) -->
+    <color name="pure_black">#FF000000</color>
+    <color name="pure_white">#FFFFFFFF</color>
+
+    <!-- 테마별 유동 색상 (Light Mode) -->
+    <color name="app_background">#FFFFFF</color>
+    <color name="main_text">#000000</color>
+    <color name="sub_text">#5F6368</color>
+    <color name="component_bg">#FFF5F5F5</color>
+    <color name="stroke_color">#DADCE0</color>
+
+    <!-- 챗봇용 색상 -->
+    <color name="chat_bot_bubble">#F1F5F9</color>
+    <color name="chat_bot_text">#000000</color>
+    <color name="chat_user_bubble">#3b8db8</color>
+    <color name="chat_user_text">#FFFFFF</color>
+
+    <!-- 기존 리소스 호환성을 위한 별칭 -->
+    <color name="light_gray">#FFE0E0E0</color>
+    <color name="gray_text">#5F6368</color>
+    <color name="edit_text_bg">#FFF5F5F5</color>
+    <color name="dial_bg">#FFFFFF</color>
+
+    <!-- 포인트 색상 (고정) -->
+    <color name="primary_blue">#3b8db8</color>
+    <color name="blue">#3b8db8</color>
+    <color name="green">#3b8db8</color>
+    <color name="orange">#3b8db8</color>
+
+    <!-- 시스템 색상 (고정) -->
+    <color name="red">#FFF44336</color>
+
+    <!-- 차트 전용 컬러 팔레트 (현대적인 파스텔톤) -->
+    <color name="chart_1">#4E79A7</color>
+    <color name="chart_2">#F28E2B</color>
+    <color name="chart_3">#E15759</color>
+    <color name="chart_4">#76B7B2</color>
+    <color name="chart_5">#59A14F</color>
+
+    <!-- 소셜 버튼 등 -->
+    <color name="google_btn_bg">#FFFFFF</color>
+    <color name="google_btn_text">#757575</color>
+
+    <!-- 하위 호환성을 위해 남겨둠 -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
