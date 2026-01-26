@@ -30,7 +30,20 @@
 
 > **개발 기간** : 2025.12.22 ~ 2026.01.22 (31일)
 
+> **개발 환경**<br>
+> - Google Colab GPU A100<br>
+> - Python 3.13<br>
+> - Android Gradle Plugin (AGP): 8.13.2
+> - Kotlin 2.0.21
+> - Compile SDK: 35 (Android 15)
+>     - Target SDK: 36 (Android 16 대응 설정)
+>     - Minimum SDK: 33 (Android 13 이상 지원)
+> - Java 버전: Java 11 (Compile/Kotlin JVM Target 모두)
+> - UI 시스템: XML ViewBinding
+> - Jetpack
+
 <br>
+<hr>
 
 ## 기존 유사 서비스와 차별점
 
@@ -41,6 +54,8 @@
 | 시티즌코난 | 악성 APK | 앱 시그니처 스캔 | 취약 | 기기 권한 대량 요구 | 없음 | 발견 즉시 |
 | 에이닷 | 키워드 | 서버형 AI 분석 | 취약 | 서버 전송 분석 | 단순 포함 여부 | 실시간 알림 |
 | 후후 | 발신자 번호 | 블랙리스트 DB | 취약 | 번호/스팸 정보 위주 | 없음 | 스팸/안심 |
+
+<hr>
 
 # 2. Restrictions (제약사항)
 ## 통신비밀보호법
@@ -146,9 +161,9 @@
 |  |  |  |
 |-----------------|-----------------|-----------------|
 | 허성욱<br>[GitHub](https://github.com/dokpe01) | `팀장` | <ul><li> 프로젝트 총괄 및 일정 관리 </li> <li> 전체 파이프라인 설계 </li> <li> 대화 맥락 탐지 모델 개발 <li> 딥보이스 탐지 모델 개발 </li> <li> 감성 분류 모델 개발 </li> <li> 전체적인 모델 성능 개선 </li> <li> 프로젝트 발표 </li> </ul> |
-| 이경민<br>[GitHub](https://github.com/bidulgirin) | `팀원` | <ul><li> 애플리케이션 개발 <li> 데이터베이스 설계 및 구축 </li> <li> FastAPI 서버 구축 및 배포 </li> <li> 사후 관리(유지 보수) </li> </ul> |
-| 김나영<br> [GitHub](https://github.com/NA-young524) | `팀원` | <ul><li> 통화 요약 리포트 모델 개발 </li><li> 챗봇 개발 </li> <li> 딥보이스 탐지 모델 개발 </li> </ul> |
-| 김정안<br>[GitHub](https://github.com/jeongan47) | `팀원` | <ul><li> 데이터 수집 및 분석 </li><li> 대시보드 개발 및 시각화 </li></ul> |
+| 이경민<br>[GitHub](https://github.com/bidulgirin) | `팀원` | <ul><li> 애플리케이션 개발 <li> 데이터베이스 설계 및 구축 </li> <li> FastAPI 서버 구축 및 배포 </li> <li> 유지보수 자동화 파이프라인 구축 </li> </ul> |
+| 김나영<br> [GitHub](https://github.com/NA-young524) | `팀원` | <ul><li> 통화 요약 리포트 모델 개발 </li><li> 챗봇 개발 </li> <li> 딥보이스 탐지 모델 개발 </li> <li> 음성 신호 분석 </li> </ul> |
+| 김정안<br>[GitHub](https://github.com/jeongan47) | `팀원` | <ul><li> 피해 현황 데이터 수집 및 분석 </li><li> 대시보드 개발 및 시각화 </li> <li> 피싱 데이터 수집 및 대화 맥락 분석 </li> </ul> |
 
 <br/>
 <br/>
@@ -156,32 +171,32 @@
 # 5. Technology Stack (사용 기술)
 |  |  |
 |-----------------|-----------------| 
-| FastAPI |  |
-| PostgreSQL |  |
-| Android Studio | | 
-| Pytorch |  |
-| Tensorflow |  |
-| Whisper |  |
-| koBERT |  |
-| Transformer |  |
-| AutoEncoder |  |
-| MFCC |  |
-| Mel-Spectrogram |  |
-| LangChain | |
-| RAG |  |
-| AI Agent |  |
-| VectorDB(FAISS) |  |
-| Wav2Vec 2.0 |  |
-| BS4 / Selenium |  |
-| Git / GitHub |  |
-| Google Sheet |  |
-| Streamlit |  |
+| FastAPI | API 서버 구축 |
+| PostgreSQL | 데이터베이스 구축 |
+| Android Studio | 애플리케이션 개발 | 
+| Pytorch | 모델링 및 pth 형태로 저장 후 백엔드 연동 |
+| Tensorflow | RandomForest 모델 구축하여 스태킹 앙상블 시스템 구축 |
+| Whisper | Faster-Whisper Large V3 모델로 STT 변환 진행 |
+| koBERT | HuggingFace 한국어 사전 학습 모델 로드 후 문맥 기반의 파인 튜닝을 통한 대화 맥락 정밀 분석 |
+| Transformer | Self-Attention, Multi-Head 기술로 전체적인 맥락(흐름)을 분석 |
+| AutoEncoder | koBERT의 서버 비용 및 연산량 대폭 감소를 위한 1차적인 방어막 역할 수행 |
+| MFCC | 음성 신호의 특징을 수치화한 벡터 |
+| Mel-Spectrogram | 음성 신호의 특징을 그림으로 표현 |
+| LangChain | 통화 요약 리포트 및 챗봇 프레임워크 |
+| RAG | 외부 문서 검색 증강 기법 |
+| AI Agent | LLM 모델에 페르소나를 부여하여 분석 정밀도 향상 |
+| VectorDB(FAISS) | 사례를 임베딩하여 챗봇에서 검색할 수 있는 문서 구축 |
+| Wav2Vec 2.0 | 감성 분류 사전 학습 모델 |
+| BS4 / Selenium | 금융감독원 보이스피싱 사례 동적 크롤링 |
+| Git / GitHub | 코드 관리 |
+| Google Sheet | WBS 등 공동 문서 작업 및 데이터 관리 |
+| Streamlit | 데이터 분석 보고서 대시보드 작성 |
 
 
 <br/>
 <br/>
 
-# 6. Project Structure (프로젝트 구조) - 작성중
+# 6. Project Structure (프로젝트 구조)
 ```plaintext
 project/
 ├── BackEnd/
